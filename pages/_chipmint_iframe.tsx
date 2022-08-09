@@ -1,4 +1,6 @@
-export default function Example() {
+import React, { useState, useEffect } from 'react'
+
+function PaymentElement() {
   return (
     <div className="bg-white shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
@@ -37,5 +39,50 @@ export default function Example() {
         </div>
       </div>
     </div>
-  )
+  );
 }
+
+function VerificationElement() {
+  return (
+    <div className="bg-white shadow sm:rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <h3 className="text-lg leading-6 font-medium text-gray-900">Verify your phone number</h3>
+        <div className="mt-2 max-w-xl text-sm text-gray-500">
+          <p>Connect your phone number with your wallet on-chain.</p>
+        </div>
+        <form className="mt-5 sm:flex sm:items-center">
+          <div className="w-full sm:max-w-xs">
+            <label htmlFor="verify-tel" className="sr-only">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              name="tel"
+              id="verify-tel"
+              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+              placeholder="XXX-XXX-XXXX"
+            />
+          </div>
+          <button
+            type="submit"
+            className="mt-3 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+          >
+            Verify Now
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function IFrameElement() {
+
+  return (
+    // <div>
+      // <VerificationElement/>
+      <PaymentElement/>
+    // </div>
+  );
+}
+
+export default IFrameElement;
