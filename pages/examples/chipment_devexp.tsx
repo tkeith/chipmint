@@ -5,7 +5,7 @@ function App() {
   return (
     <div className="App">
       <h3>Iframes Loaded Below</h3>
-      <iframe src="http://localhost:8000/_chipmint_iframe" className="w-100%"></iframe>
+      <iframe src="http://localhost:8000/_chipmint_iframe?needsAuth=false&msgQty=100" className="w-full h-96"></iframe>
     </div>
   );
 }

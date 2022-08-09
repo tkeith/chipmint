@@ -1,4 +1,13 @@
+import axios from 'axios';
 import React, { useState, useEffect } from 'react'
+
+enum VeriState {
+  NotChecked = 1,
+  notVerified,
+  Verified,
+  SentOtp,
+  confirmingOtp,
+};
 
 function PaymentElement() {
   return (
@@ -42,45 +51,170 @@ function PaymentElement() {
   );
 }
 
-function VerificationElement() {
+
+function VerificationElement(props) {
+  // console.log(props.saveText)
   return (
     <div className="bg-white shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">Verify your phone number</h3>
-        <div className="mt-2 max-w-xl text-sm text-gray-500">
-          <p>Connect your phone number with your wallet on-chain.</p>
-        </div>
-        <form className="mt-5 sm:flex sm:items-center">
-          <div className="w-full sm:max-w-xs">
-            <label htmlFor="verify-tel" className="sr-only">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              name="tel"
-              id="verify-tel"
-              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-              placeholder="XXX-XXX-XXXX"
-            />
+        <h3 className="text-lg leading-6 font-medium m-3 text-gray-900">Verify your phone number</h3>
+
+        <div className="rounded-md bg-gray-50 px-6 py-5 sm:flex sm:items-start sm:justify-between">
+          <div className="mt-2 max-w-xl text-sm text-gray-500">
+            <p>Connect your phone number with your wallet on-chain.</p>
           </div>
-          <button
-            type="submit"
-            className="mt-3 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-          >
-            Verify Now
-          </button>
-        </form>
+          <form className="mt-5 sm:flex sm:items-center" onSubmit={props.saveText}>
+            <div className="w-full sm:max-w-xs">
+              <label htmlFor="verify-tel" className="sr-only">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="tel"
+                id="verify-tel"
+                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                placeholder="XXX-XXX-XXXX"
+              />
+            </div>
+            <button
+              type="submit"
+              className="mt-3 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Get my OTP
+            </button>
+          </form>
+        </div>
       </div>
+    </div>
+  )
+}
+
+function EnterOtpElement(props) {
+  // console.log(props.enterOtp)
+  return (
+    <div className="bg-white shadow sm:rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <h3 className="text-lg leading-6 font-medium m-3 text-gray-900">Enter the OTP sent to your SMS</h3>
+
+        <div className="rounded-md bg-gray-50 px-6 py-5 sm:flex sm:items-start sm:justify-between">
+          <div className="mt-2 max-w-xl text-sm text-gray-500">
+            <p>Your OPT should arrive in a few seconds.</p>
+          </div>
+          <form className="mt-5 sm:flex sm:items-center" onSubmit={props.enterOtp}>
+            <div className="w-full sm:max-w-xs">
+              <label htmlFor="verify-opt" className="sr-only">
+                OTP
+              </label>
+              <input
+                type="text"
+                name="otp"
+                id="verify-otp"
+                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                placeholder="XXXXXX"
+              />
+            </div>
+            <button
+              type="submit"
+              className="mt-3 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Verify Now
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VerifiedElement() {
+  return (
+    <div className="bg-white shadow sm:rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <h3 className="text-lg leading-6 font-medium m-3 text-gray-900">Your phone number is verified!</h3>
+      </div>
+    </div>
+  )
+}
+
+function VerificationFlow (props) {
+  const authRequest = props.authRequest;
+  
+  const [curVeriState, setCurVeriState] = useState<VeriState>(VeriState.NotChecked);
+
+  const saveText = async (event: React.FormEvent) => {
+    event.preventDefault()
+    let isLive: boolean = false;
+    let url: string = "localhost:8005/requestOtp"
+    const formData = new FormData(event.target as HTMLFormElement)
+
+    if (isLive) {
+      // const res = await axios.post(url, {
+      //   phoneNumber: formData.get('tel') as string,
+      // });
+      const axiosParams = new URLSearchParams();
+      axiosParams.append("phoneNumber", formData.get('tel') as string);
+      const res = await axios.get(url, {
+        params: axiosParams
+      })
+      if (res.status == 200) {
+        setCurVeriState(VeriState.SentOtp);
+      } else {
+        alert("Error!")
+      }
+    } else {
+      setCurVeriState(VeriState.SentOtp);
+    }
+  }
+
+  const enterOtp = async (event: React.FormEvent) => {
+    event.preventDefault()
+    let isLive: boolean = false;
+    let url: string = "localhost:8005/verifyOtp"
+    const formData = new FormData(event.target as HTMLFormElement)
+
+    if (isLive) {
+      const res = await axios.post(url, {
+        phoneNumber: formData.get('tel') as string,
+        otp: formData.get('otp') as string,
+      });
+      // const axiosParams = new URLSearchParams();
+      // axiosParams.append("phoneNumber", formData.get('tel') as string);
+      // axiosParams.append("otp", formData.get('otp') as string);
+      // const res = await axios.get(url, {
+      //   params: axiosParams
+      // })
+      if (res.status == 200) {
+        setCurVeriState(VeriState.Verified);
+      } else {
+        alert("Error!")
+      }
+    } else {
+      setCurVeriState(VeriState.Verified);
+    }
+  }
+
+  // const styles: { [key: string]: React.CSSProperties } = {
+  //   container: {
+  //     width: 300,
+  //     height: 300,
+  //   },
+  // };
+  return (
+    <div>
+      {curVeriState === VeriState.NotChecked  && <VerificationElement saveText={saveText}/>
+      }
+      {curVeriState === VeriState.SentOtp && <EnterOtpElement enterOtp={enterOtp}/>}
+      {curVeriState === VeriState.Verified && <VerifiedElement/>}
     </div>
   );
 }
 
-function IFrameElement() {
+function IFrameElement(props) {
 
   return (
     // <div>
-      // <VerificationElement/>
-      <PaymentElement/>
+      <VerificationFlow props={props}/>
+      // <PaymentElement/>
     // </div>
   );
 }
