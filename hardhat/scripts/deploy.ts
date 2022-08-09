@@ -2,11 +2,13 @@ import { readFileSync } from "fs"
 import hre, { ethers, upgrades } from "hardhat"
 import _ from "lodash"
 import getConfig from "../../lib/getConfig"
+import privateKeyToAddress from "../../lib/privateKeyToAddress"
 
 const contractInfos = [
   {
     name: "MainContract",
     initializerArgs: [
+      privateKeyToAddress(getConfig().server.manager_wallet_private_key)
     ]
   }
 ]

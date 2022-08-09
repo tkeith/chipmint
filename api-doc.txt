@@ -1,0 +1,24 @@
+# Chipmint API endpoints
+
+POST /requestOtp { phoneNumber }
+expect 200
+
+GET /checkOtp/:phoneNumber/:otp
+expect 200, { otpValid: boolean, messageToSign: string }
+
+POST /registerVerification { phoneNumber, otp, signature }
+expect 200
+
+GET /isAddressVerified/:address
+expect 200, { verified: boolean }
+
+GET /isAuthorized/:sender/:recipient
+expect 200, one of:
+  { authorized: true, qty: int, exp: int }
+  { authorized: false }
+
+GET /getAuthorizationMessageToSign { sender, qty, exp }
+expect 200, { message: string }
+
+POST /registerAuthorization { sender, qty, exp, signature }
+expect 200
