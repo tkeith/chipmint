@@ -2,7 +2,7 @@ import { TestElement, Chipmint } from "./_chipmint_lib";
 
 import React, { useState } from 'react';
 
-function ChipmintPreviewIFrame(props) {
+function ChipmintPreviewIFrame(props: any) {
   return (
     <div className="App border-dashed border border-black p-7 rounded-lg" >
       <iframe src={"http://localhost:8000/_chipmint_iframe?" +
@@ -19,7 +19,7 @@ function ChipmintPreviewIFrame(props) {
 
 function ChipmintPreviewFlow() {
 
-  const [tagArgs, setTagArgs] = useState({});
+  const [tagArgs, setTagArgs]: [tagArgs: any, setTagArgs: any] = useState({});
 
   let chipmintTag = "";
   if (Object.keys(tagArgs).length > 3) {
@@ -33,12 +33,12 @@ function ChipmintPreviewFlow() {
 />`;
   }
   // console.log("tagArgs:", tagArgs.qty);
-  const tagTextStyle: { [key: string]: React.CSSProperties } = {
-    container: {
-      "font-family": "monospace",
-      "color": "purple",
-    },
-  };
+  // const tagTextStyle: { [key: string]: React.CSSProperties } = {
+  //   container: {
+  //     "font-family": "monospace",
+  //     "color": "purple",
+  //   },
+  // };
 
   const generateTag = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -169,8 +169,8 @@ function ChipmintPreviewFlow() {
                         name="chipmint-tag"
                         rows={8}
                         spellCheck="false"
-                        style={tagTextStyle.container}
-                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
+                        // style={tagTextStyle.container}
+                        className="font-mono shadow-sm text-indigo-500 focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
                         defaultValue={chipmintTag}
                       />
                     </div>

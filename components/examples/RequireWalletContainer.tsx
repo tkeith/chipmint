@@ -9,15 +9,15 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   const { isConnected } = useAccount();
   const isMounted = useIsMounted();
   const { chain } = useNetwork();
-  const connectButtonStyle: { [key: string]: React.CSSProperties } = {
-    container: {
-      "padding-left": "15px",
-      "padding-right": "15px",
-    },
-  };
+  // const connectButtonStyle: { [key: string]: React.CSSProperties } = {
+  //   container: {
+  //     "padding-left": "15px",
+  //     "padding-right": "15px",
+  //   },
+  // };
   return (
     <> 
-      <div style={connectButtonStyle.container}>
+      <div className="px-3">
         <ConnectButton/>
       </div>
       {isMounted && isConnected && !chain?.unsupported && children}

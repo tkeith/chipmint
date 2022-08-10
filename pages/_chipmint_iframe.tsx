@@ -64,7 +64,7 @@ function PaymentElement() {
 }
 
 
-function VerificationElement(props) {
+function VerificationElement(props: any) {
   // console.log(props.requestOtp)
   return (
     <div className="bg-white shadow sm:rounded-lg">
@@ -101,7 +101,7 @@ function VerificationElement(props) {
   )
 }
 
-function EnterOtpElement(props) {
+function EnterOtpElement(props: any) {
   // console.log(props.enterOtp)
   return (
     <div className="bg-white shadow sm:rounded-lg">
@@ -158,7 +158,7 @@ function CheckingAuth() {
   )
 }
 
-function GetAuthElement(props) {
+function GetAuthElement(props: any) {
   return (
     <div className="bg-white shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
@@ -226,7 +226,7 @@ async function checkAddressVerification(userAddr: string) {
   }
 }
 
-function VerificationFlow (props) {
+function VerificationFlow (props: any) {
   console.log("props:", props);
 
   const userAddr = useAccount().address;
