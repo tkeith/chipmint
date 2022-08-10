@@ -49,9 +49,14 @@ router.route('/requestOtp').post(wrap(async (req: Request, res: Response) => {
 
   const otp = randomNumericCode(6)
 
+  console.log('SENDING OTP')
+
   await sendSms(phoneNumber, `${otp} is your Chipmint verification code`)
+  
+  console.log('SENT OPT')
 
   await (await getRedis()).set(`otpValid:${phoneNumber}:${otp}`, 1, {EX: 300})
+
 
   return res.json({'note': 'OTP sent'})
 }))
@@ -117,12 +122,12 @@ router.route('/registerVerification').post(wrap(async (req: Request, res: Respon
   const nonce = randomHexString(32)
   const phoneHash = getPhoneHash(phoneNumber, nonce)
 
-  await (await getDb()).collection('recipients').insertOne({
+  await (await getDb()).collection('recipients').updateOne({address: recipient}, {
     phoneNumber: phoneNumber,
     address: recipient,
     nonce: nonce,
     phoneHash: phoneHash
-  })
+  }, {upsert: true})
 
   console.log('verifying on chain:', phoneNumber, recipient)
 

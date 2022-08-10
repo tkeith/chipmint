@@ -21,6 +21,10 @@ setInterval(() => {
 console.log('worker started')
 
 getContractWithSigner().on("SmsRequested", async (smsRequestId: number, sender: string, recipient: string, time: number, text: string, newAuthQty: number) => {
+  recipient = recipient.toLowerCase()
+  
+  console.log('SMS REQUESTED: ', recipient, text)
+  
   const recip = await (await getDb()).collection('recipients').findOne({address: recipient}) as Recipient
 
   await (await getDb()).collection('authorizations').updateOne({sender: sender, recipient: recipient}, {$set: {qty: newAuthQty}})
@@ -30,7 +34,11 @@ getContractWithSigner().on("SmsRequested", async (smsRequestId: number, sender: 
     sendSms(recip.phoneNumber, text)
   } catch (err) {
     newStatus = 2; // failed
+    console.log('failed to send:', err)
   }
+
+  console.log('NEW STATUS: ', newStatus)
+
   await (await getDb()).collection('smsRequests').insertOne({id: smsRequestId, sender: sender, recipient: recipient, time: time, text: text, status: newStatus})
 
   const tx = await (getContractWithSigner()).setSmsStatus(smsRequestId, newStatus, {

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 function ChipmintPreviewIFrame(props: any) {
   return (
     <div className="App border-dashed border border-black p-7 rounded-lg" >
-      <iframe src={"http://localhost:8000/_chipmint_iframe?" +
+      <iframe src={"/_chipmint_iframe?" +
         `needAuth=${props.tagArgs?.needAuth || "true"}&` + 
         `qty=${props.tagArgs?.qty || 100}&` +
         `durationDays=${props.tagArgs?.durationDays || 365}&` +

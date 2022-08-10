@@ -18,7 +18,7 @@ enum VeriState {
   Authorized,
 };
 
-const addrPrefix = "https://app.chipmint.co/express"
+const addrPrefix = "/express"
 const isLive = true;
 
 function PaymentElement() {
