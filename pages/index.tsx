@@ -178,7 +178,7 @@ function ChipmintPreviewFlow() {
                 <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
                   <button
                     type="submit"
-                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-sky-500 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
                   >
                     Copy to clipboard
                   </button>
@@ -230,18 +230,18 @@ function ChipmintPreviewFlow() {
 function ChipmintTryoutFullPage() {
   return (
   <>
-    <div className="min-h-full pt-16 pb-12 flex flex-col bg-white">
+    <div className="min-h-full pb-12 flex flex-col bg-white">
       <main className="flex-grow flex flex-col justify-center max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <div className="flex-shrink-0 flex justify-center">
-          <a href="/" className="inline-flex">
+          {/* <a href="/" className="inline-flex"> */}
             <span className="sr-only">Chipmint</span>
             <img
               className="h-20 w-auto m-10"
               src="/logo.png"
               alt=""
             />
-          </a>
+          {/* </a> */}
         </div>
         <ChipmintPreviewFlow/>
         <div className="py-16">
