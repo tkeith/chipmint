@@ -17,6 +17,7 @@ import { getGasPrice } from '../lib/getGasPrice'
 import dateFromSeconds from '../lib/dateFromSeconds'
 import { strToBytes } from '../lib/strToBytes'
 import { ethers } from 'ethers'
+import { BigNumber } from 'ethers'
 
 // catch async errors
 // https://strongloop.com/strongblog/async-error-handling-expressjs-es7-promises-generators/
@@ -32,6 +33,8 @@ router.route('/grid/public/:filename(*)').get(wrap(async (req: Request, res: Res
   res.setHeader('content-type', (await gridfs.getMetadata(gridFn)).mime)
   ;(await gridfs.getGridFsBucket()).openDownloadStreamByName(gridFn).pipe(res)
 }))
+
+const GAS_PRICE = BigNumber.from('60000000000');
 
 export const plivoClient = new plivo.Client(getConfig().server.plivo.auth_id, getConfig().server.plivo.auth_token)
 export const plivoFromNumber = getConfig().server.plivo.from_number
@@ -78,7 +81,7 @@ async function verifyPhoneNumberOnChain(address: string, phoneHash: string) {
   console.log('got contract with signer')
   console.log('verifying phone num for address: ', address, JSON.stringify(address))
   const tx = await cws.setPhoneNumberVerified(address, phoneHash, {
-    gasPrice: getGasPrice() ?? 0 * 3,
+    gasPrice: GAS_PRICE,
   })
   console.log('verifyPhoneNumber txn:', tx.hash)
 }
@@ -87,7 +90,7 @@ async function registerAuthorizationOnChain(sender: string, recipient: string, q
   const cws = getContractWithSigner()
   console.log('got contract with signer')
   const tx = await cws.registerAuthorization(sender, recipient, qty, exp, {
-    gasPrice: getGasPrice() ?? 0 * 3,
+    gasPrice: GAS_PRICE,
   })
   console.log('registerAuthorization txn:', tx.hash)
 }
@@ -129,7 +132,7 @@ router.route('/registerVerification').post(wrap(async (req: Request, res: Respon
 }))
 
 router.route('/isAddressVerified/:address').get(wrap(async (req: Request, res: Response) => {
-  const address = req.params.address
+  const address = (req.params.address as string).toLowerCase()
 
   const verified = !! await (await getDb()).collection('recipients').findOne({address: address})
 
@@ -140,7 +143,7 @@ router.route('/isAddressVerified/:address').get(wrap(async (req: Request, res: R
 
 router.route('/isAuthorized/:sender/:recipient').get(wrap(async (req: Request, res: Response) => {
   const sender = req.params.sender
-  const recipient = req.params.recipient
+  const recipient = (req.params.recipient as string).toLowerCase()
 
   const auth = await (await getDb()).collection('authorizations').findOne({sender: sender, recipient: recipient})
 
@@ -166,7 +169,7 @@ function getAuthMsg(sender: string, qty: number, exp: number) {
 }
 
 router.route('/getAuthorizationMessageToSign').get(wrap(async (req: Request, res: Response) => {
-  const sender: string = await yup.string().required().validate(req.query.sender);
+  const sender: string = (await yup.string().required().validate(req.query.sender)).toLowerCase();
   const qty: number = await yup.number().integer().required().validate(req.query.qty);
   const exp: number = await yup.number().integer().required().validate(req.query.exp);
 
@@ -178,13 +181,13 @@ router.route('/getAuthorizationMessageToSign').get(wrap(async (req: Request, res
 function verifyMessage(msg: string, sig: string) {
   const prefix = 'valid_signature_for:'
   if (testMode && sig.startsWith(prefix)) {
-    return sig.split(':')[1]
+    return sig.split(':')[1].toLowerCase()
   }
-  return ethers.utils.verifyMessage(msg, sig)
+  return ethers.utils.verifyMessage(msg, sig).toLowerCase()
 }
 
 router.route('/registerAuthorization').post(wrap(async (req: Request, res: Response) => {
-  const sender: string = await yup.string().required().validate(req.body.sender);
+  const sender: string = (await yup.string().required().validate(req.body.sender)).toLowerCase();
   const qty: number = await yup.number().integer().required().validate(req.body.qty);
   const exp: number = await yup.number().integer().required().validate(req.body.exp);
   const signature: string = await yup.string().required().validate(req.body.signature);
@@ -207,6 +210,6 @@ router.route('/registerAuthorization').post(wrap(async (req: Request, res: Respo
   await registerAuthorizationOnChain(sender, recipient, qty, exp);
 
   await (await getDb()).collection('authorizations').updateOne({sender: sender, recipient: recipient}, {$set: {sender: sender, recipient: recipient, qty: qty, exp: exp}}, {upsert: true})
-  
+
   return res.json({note: 'Authorization registered'})
 }))
