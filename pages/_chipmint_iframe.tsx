@@ -308,7 +308,7 @@ function VerificationFlow (props: any) {
 
   const { signMessage: signOptMessage } = useSignMessage({
     onSuccess(data, variables) {
-      window.signingOptMessage = undefined;
+      window['signingOptMessage'] = undefined;
       // Verify signature when sign message succeeds
       const recoveredAddr = verifyMessage(variables.message, data);
       if (recoveredAddr === userAddr) {
@@ -318,7 +318,7 @@ function VerificationFlow (props: any) {
       }
     },
     onError(error, variables, context) {
-      window.signingOptMessage = undefined;
+      window['signingOptMessage'] = undefined;
       alert(error.message);
       setCurVeriState(VeriState.EnterOtp);
       throw Error(error.message);
@@ -327,7 +327,7 @@ function VerificationFlow (props: any) {
 
   const { signMessage: signAuthMessage } = useSignMessage({
     onSuccess(data, variables) {
-      window.signingAuthMessage = undefined;
+      window['signingAuthMessage'] = undefined;
       // Verify signature when sign message succeeds
       const recoveredAddr = verifyMessage(variables.message, data);
       if (recoveredAddr === userAddr) {
@@ -337,7 +337,7 @@ function VerificationFlow (props: any) {
       }
     },
     onError(error, variables, context) {
-      window.signingAuthMessage = undefined;
+      window['signingAuthMessage'] = undefined;
       setCurVeriState(VeriState.AskingAuth);
       throw Error(error.message);
     }
@@ -440,8 +440,8 @@ function VerificationFlow (props: any) {
   } else if (curVeriState === VeriState.RequestingSignOtp) {
     setCurVeriState(VeriState.SigningOtp);
     if (isBrowser()) {
-      if (window.signingOptMessage === undefined) {
-        window.signingOptMessage = true;
+      if (window['signingOptMessage'] === undefined) {
+        window['signingOptMessage'] = true;
         signOptMessage({message: optMessageToSign});
       }
     }
@@ -452,8 +452,8 @@ function VerificationFlow (props: any) {
     setCurVeriState(VeriState.SigningAuth);
 
     if (isBrowser()) {
-      if (window.signingAuthMessage === undefined) {
-        window.signingAuthMessage = true;
+      if (window['signingAuthMessage'] === undefined) {
+        window['signingAuthMessage'] = true;
         signAuthMessage({message: authMessageToSign});
       }
     }
