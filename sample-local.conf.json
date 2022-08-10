@@ -9,7 +9,13 @@
     "mongo_express_enabled": true,
     "jupyter_enabled": true,
     "code_server_enabled": true,
-    "manager_wallet_private_key": ""
+    "manager_wallet_private_key": "",
+    "manager_wallet_private_key": "",
+    "plivo": {
+      "auth_id": "",
+      "auth_token": "",
+      "from_number": ""
+    }
   },
   "public": {
     "develop": true,

@@ -94,7 +94,7 @@ function ChipmintPreviewFlow() {
                         placeholder="0x..."
                         // value={tagArgs.sender || "0x23D9E89D457404dB99b6addC8638cc0e4368Bb5c"}
                         // onChange={e => setTagArgs({ ...tagArgs, sender: e.target.value })}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        className="mt-1 focus:ring-sky-500 focus:border-sky-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                       />
                     </div>
 
@@ -108,7 +108,7 @@ function ChipmintPreviewFlow() {
                         id="qty"
                         value={tagArgs.qty || 100}
                         onChange={e => setTagArgs({ ...tagArgs, qty: e.target.value})}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        className="mt-1 focus:ring-sky-500 focus:border-sky-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                       />
                     </div>
 
@@ -122,7 +122,7 @@ function ChipmintPreviewFlow() {
                         id="duration-days"
                         value={tagArgs.durationDays || 365}
                         onChange={e => setTagArgs({ ...tagArgs, durationDays: e.target.value})}
-                        className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                        className="mt-1 focus:ring-sky-500 focus:border-sky-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                       />
                     </div>
                   </div>
@@ -131,7 +131,7 @@ function ChipmintPreviewFlow() {
                 <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
                   <button
                     type="submit"
-                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-sky-500 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
                   >
                     Generate
                   </button>
@@ -168,7 +168,7 @@ function ChipmintPreviewFlow() {
                         rows={8}
                         spellCheck="false"
                         // style={tagTextStyle.container}
-                        className="font-mono shadow-sm text-indigo-500 focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
+                        className="font-mono shadow-sm text-sky-500 focus:ring-sky-500 focus:border-sky-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
                         defaultValue={chipmintTag}
                       />
                     </div>
@@ -178,7 +178,7 @@ function ChipmintPreviewFlow() {
                 <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
                   <button
                     type="submit"
-                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
                   >
                     Copy to clipboard
                   </button>
@@ -208,6 +208,20 @@ function ChipmintPreviewFlow() {
           </div>
         </div>
       </div>
+
+      {/* <div className="mt-10 sm:mt-0">
+        <div className="md:grid md:grid-cols-3 md:gap-6">
+          <div className="md:col-span-1">
+            <div className="px-4 sm:px-0">
+              <h3 className="text-lg font-medium leading-6 text-gray-900">Chipmint Sender Preview</h3>
+              <p className="mt-1 text-sm text-gray-600">See how you send SMS to a user by wallet address.</p>
+            </div>
+          </div>
+          <div className="mt-5 md:mt-0 md:col-span-2">
+            Sender Side
+          </div>
+        </div>
+      </div> */}
     </>
   )
 }
@@ -218,26 +232,26 @@ function ChipmintTryoutFullPage() {
   <>
     <div className="min-h-full pt-16 pb-12 flex flex-col bg-white">
       <main className="flex-grow flex flex-col justify-center max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <ChipmintPreviewFlow/>
         {/* Logo */}
-        {/* <div className="flex-shrink-0 flex justify-center">
+        <div className="flex-shrink-0 flex justify-center">
           <a href="/" className="inline-flex">
-            <span className="sr-only">Workflow</span>
+            <span className="sr-only">Chipmint</span>
             <img
-              className="h-12 w-auto"
-              src="https://tailwindui.com/img/logos/workflow-mark.svg?color=indigo&shade=600"
+              className="h-20 w-auto m-10"
+              src="/logo.png"
               alt=""
             />
           </a>
-        </div> */}
+        </div>
+        <ChipmintPreviewFlow/>
         <div className="py-16">
           <div className="text-center">
-            {/* <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">404 error</p>
+            {/* <p className="text-sm font-semibold text-sky-600 uppercase tracking-wide">404 error</p>
             <h1 className="mt-2 text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">Page not found.</h1>
             <p className="mt-2 text-base text-gray-500">Sorry, we couldn’t find the page you’re looking for.</p> */}
             <div className="mt-6">
-              <a href="https://app.chipmint.co" className="text-base font-medium text-indigo-600 hover:text-indigo-500">
-                Go back home<span aria-hidden="true"> &rarr;</span>
+              <a href="https://polygonscan.com/address/0xB788E3281F36C9f403d4fc8759bB5A8a6EA46306" className="text-base font-medium text-sky-600 hover:text-sky-500">
+                View contract on PolygonScan<span aria-hidden="true"> &rarr;</span>
               </a>
             </div>
           </div>
