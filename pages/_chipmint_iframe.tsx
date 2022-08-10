@@ -1,14 +1,25 @@
 import axios from 'axios';
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
+import { useAccount, useSignMessage } from 'wagmi';
+import { verifyMessage, Bytes, hexlify } from 'ethers/lib/utils';
+import RequireWalletContainer from '../components/examples/RequireWalletContainer'
+
 
 enum VeriState {
   NotChecked = 1,
   notVerified,
   Verified,
-  SentOtp,
-  confirmingOtp,
-  GetAuth
+  EnterOtp,
+  requestingSignOtp,
+  signingOtp,
+  checkAuth,
+  requestingSignAuth,
+  signingAuth,
+  Authorized,
 };
+
+const addrPrefix = "https://app.chipmint.co/express"
+const isLive = true;
 
 function PaymentElement() {
   return (
@@ -54,7 +65,7 @@ function PaymentElement() {
 
 
 function VerificationElement(props) {
-  // console.log(props.saveText)
+  // console.log(props.requestOtp)
   return (
     <div className="bg-white shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
@@ -64,7 +75,7 @@ function VerificationElement(props) {
           <div className="mt-2 max-w-xl text-sm text-gray-500">
             <p>Connect your phone number with your wallet on-chain.</p>
           </div>
-          <form className="mt-5 sm:flex sm:items-center" onSubmit={props.saveText}>
+          <form className="mt-5 sm:flex sm:items-center" onSubmit={props.requestOtp}>
             <div className="w-full sm:max-w-xs">
               <label htmlFor="verify-tel" className="sr-only">
                 Phone Number
@@ -103,7 +114,7 @@ function EnterOtpElement(props) {
           </div>
           <form className="mt-5 sm:flex sm:items-center" onSubmit={props.enterOtp}>
             <div className="w-full sm:max-w-xs">
-              <label htmlFor="verify-opt" className="sr-only">
+              <label htmlFor="verify-otp" className="sr-only">
                 OTP
               </label>
               <input
@@ -139,7 +150,6 @@ function VerifiedElement() {
 
 
 function GetAuthElement(props) {
-  // console.log(props.saveText)
   return (
     <div className="bg-white shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
@@ -147,21 +157,9 @@ function GetAuthElement(props) {
 
         <div className="rounded-md bg-gray-50 px-6 py-5 sm:flex sm:items-start sm:justify-between">
           <div className="mt-2 max-w-xl text-sm text-gray-500">
-            <p>Permit app to send you XX messages until XXX.</p>
+            <p>Permit {props.sender} to send you {props.qty} messages for {props.durationDays} days.</p>
           </div>
           <form className="mt-5 sm:flex sm:items-center" onSubmit={props.acceptAuth}>
-            <div className="w-full sm:max-w-xs">
-              <label htmlFor="verify-tel" className="sr-only">
-                SOME FIELD
-              </label>
-              <input
-                type="tel"
-                name="tel"
-                id="verify-tel"
-                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                placeholder="XXX-XXX-XXXX"
-              />
-            </div>
             <button
               type="submit"
               className="mt-3 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
@@ -177,71 +175,149 @@ function GetAuthElement(props) {
 
 function getParamValue(paramName: string)
 {
-    var url = window.location.search.substring(1); //get rid of "?" in querystring
-    var qArray = url.split('&'); //get key-value pairs
-    for (var i = 0; i < qArray.length; i++) 
-    {
-        var pArr = qArray[i].split('='); //split key and value
-        if (pArr[0] === paramName) {
-          return pArr[1]; //return value
-        }
+  const isBrowser = () => typeof window !== "undefined";
+  if (!isBrowser()) {
+    return;
+  } 
+  const url = window.location.search.substring(1); //get rid of "?" in querystring
+  const qArray = url.split('&'); //get key-value pairs
+  for (let i = 0; i < qArray.length; i++) 
+  {
+    let pArr = qArray[i].split('='); //split key and value
+    if (pArr[0] === paramName) {
+      return pArr[1]; //return value
     }
+  }
+}
+
+async function checkAddressVerification(userAddr: string) {
+  if (isLive) {
+    const url = addrPrefix + "/isAddressVerified/" + userAddr;
+    const res = await axios.get(url);
+    if (res.status == 200) {
+      console.log("verifiy check response:", res.data.verified);
+      return res.data.verified === true;
+    } else {
+      throw Error("Address verification errored")
+    }  
+  } else {
+    return true;
+  }
 }
 
 function VerificationFlow (props) {
-  console.log(props)
-  
+  console.log("props:", props);
+
+  const userAddr = useAccount().address;
+  if (userAddr === undefined) {
+    throw Error("user addr undefined in wallet container")
+  }
+
   const [curVeriState, setCurVeriState] = useState<VeriState>(VeriState.NotChecked);
 
-  const saveText = async (event: React.FormEvent) => {
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [otp, setOtp] = useState<string>("");
+  const [messageToSign, setMessageToSign] = useState<string>("");
+
+  console.log("starting veristate:", curVeriState);
+
+  const requestOtp = async (event: React.FormEvent) => {
     event.preventDefault()
-    let isLive: boolean = false;
-    let url: string = "localhost:8005/requestOtp"
+    let url: string = addrPrefix + "/requestOtp";
     const formData = new FormData(event.target as HTMLFormElement)
 
     if (isLive) {
-      // const res = await axios.post(url, {
-      //   phoneNumber: formData.get('tel') as string,
-      // });
-      const axiosParams = new URLSearchParams();
-      axiosParams.append("phoneNumber", formData.get('tel') as string);
-      const res = await axios.get(url, {
-        params: axiosParams
-      })
+      const newPhoneNumber = formData.get('tel') as string
+      setPhoneNumber(newPhoneNumber);
+      // alert("phonenumber from requestotp: " + newPhoneNumber);
+      const res = await axios.post(url, {
+        phoneNumber: newPhoneNumber
+      });
+      console.log("requestotp res:", res);
       if (res.status == 200) {
-        setCurVeriState(VeriState.SentOtp);
+        setCurVeriState(VeriState.EnterOtp);
       } else {
-        alert("Error!")
+        throw Error("request otp failed");
       }
     } else {
-      setCurVeriState(VeriState.SentOtp);
+      setCurVeriState(VeriState.EnterOtp);
     }
   }
 
-  const enterOtp = async (event: React.FormEvent) => {
-    event.preventDefault()
-    let isLive: boolean = false;
-    let url: string = "localhost:8005/verifyOtp"
-    const formData = new FormData(event.target as HTMLFormElement)
-
+  const registerVerification = async (otp: string, signature: string) => {
+    const url = addrPrefix + "/registerVerification";
     if (isLive) {
       const res = await axios.post(url, {
-        phoneNumber: formData.get('tel') as string,
-        otp: formData.get('otp') as string,
+        phoneNumber, otp, signature
       });
-      // const axiosParams = new URLSearchParams();
-      // axiosParams.append("phoneNumber", formData.get('tel') as string);
-      // axiosParams.append("otp", formData.get('otp') as string);
-      // const res = await axios.get(url, {
-      //   params: axiosParams
-      // })
+      console.log("registerveri res:", res);
       if (res.status == 200) {
         setCurVeriState(VeriState.Verified);
       } else {
-        alert("Error!")
+        setCurVeriState(VeriState.requestingSignOtp);
+        throw Error("registerveri failed");
       }
     } else {
       setCurVeriState(VeriState.Verified);
+    }
+
+  }
+
+  const { signMessage } = useSignMessage({
+    onSuccess(data, variables) {
+      // Verify signature when sign message succeeds
+      const recoveredAddr = verifyMessage(variables.message, data);
+      if (recoveredAddr === userAddr) {
+        registerVerification(otp, data);
+      } else {
+        throw Error(`User addr ${userAddr} and recovered addr ${recoveredAddr} don't match`)
+      }
+    },
+    onError(error, variables, context) {
+      setCurVeriState(VeriState.requestingSignOtp);
+      throw Error(error);
+    }
+  });
+
+  const enterOtp = async (event: React.FormEvent) => {
+    event.preventDefault()
+    let url: string = addrPrefix + "/checkOtp";
+    const formData = new FormData(event.target as HTMLFormElement)
+
+    if (isLive) {
+      const newOtp = formData.get('otp') as string;
+      setOtp(newOtp);
+      const getUrl = url + "/" + phoneNumber + "/" + newOtp;
+      // alert("phonenumber before enterotp: " + phoneNumber);
+      console.log("enter otp url:", getUrl);
+      const res = await axios.get(getUrl);
+      if (res.status == 200) {
+        console.log("enter otp data:", res.data)
+        const isOtpValid = res.data.otpValid;
+        if (isOtpValid) {
+          const newMessageToSign: string = res.data.messageToSign;
+          setMessageToSign(newMessageToSign);
+          // Call metamask here
+          setCurVeriState(VeriState.requestingSignOtp);
+        } else {
+          alert("OPT is invalid");
+        }
+      } else {
+        throw Error("check otp failed");
+      }
+    } else {
+      setCurVeriState(VeriState.requestingSignOtp);
+    }
+  }
+
+  const isAuthorized = async (event: React.FormEvent) => {
+    event.preventDefault()
+    let url: string = addrPrefix + "/isAuthorized/" + props.sender + "/" + userAddr;
+
+    if (isLive) {
+      
+    } else {
+      setCurVeriState(VeriState.requestingSignAuth)
     }
   }
 
@@ -251,31 +327,57 @@ function VerificationFlow (props) {
   //     height: 300,
   //   },
   // };
-  if (curVeriState === VeriState.Verified && props.needAuth) {
+
+  if (curVeriState === VeriState.NotChecked) {
+    checkAddressVerification(userAddr).then((isAddressVerified) => {
+      console.log("isaddrveri", isAddressVerified);
+      if (isAddressVerified) {
+        setCurVeriState(VeriState.Verified);
+      }
+    }).catch((reason) => {console.log(reason)});
+  } else if (curVeriState === VeriState.requestingSignOtp) {
+    setCurVeriState(VeriState.signingOtp);
+    signMessage({message: messageToSign});
+  } else if (curVeriState === VeriState.Verified && props.needAuth === true) {
     setCurVeriState(VeriState.GetAuth);
   }
+  // console.log(curVeriState, curVeriState === VeriState.Verified, props.needAuth === true, props.needAuth)
   return (
     <div>
-      {curVeriState === VeriState.NotChecked  && <VerificationElement saveText={saveText}/>
+      {curVeriState === VeriState.NotChecked &&
+        <VerificationElement requestOtp={requestOtp}/>
       }
-      {curVeriState === VeriState.SentOtp && <EnterOtpElement enterOtp={enterOtp}/>}
+      {curVeriState === VeriState.EnterOtp &&
+        <EnterOtpElement enterOtp={enterOtp}/>}
       {curVeriState === VeriState.Verified && <VerifiedElement/>}
-      {curVeriState === VeriState.GetAuth && <GetAuthElement/>}
+      {curVeriState === VeriState.GetAuth &&
+        <GetAuthElement qty={props.qty} sender={props.sender} durationDays={props.durationDays} acceptAuth={acceptAuth}/>}
     </div>
   );
 }
 
 function IFrameElement() {
-  const props = {
-    // needAuth: getParamValue('needAuth'),
-    // msgQty: getParamValue('msgQty')
+  
+  let needAuthParam = getParamValue('needAuth');
+  let needAuth = true;
+  if (needAuthParam !== undefined ) {
+    needAuth = needAuthParam === "true";
   }
+  const qty = Number(getParamValue('qty') || 100);
+  const durationDays = Number(getParamValue('durationDays') || 365);
+  const sender = getParamValue('sender');
 
   return (
-    // <div>
-      <VerificationFlow props={props}/>
-      // <PaymentElement/>
-    // </div>
+    <RequireWalletContainer>
+
+      <VerificationFlow
+        needAuth={needAuth}
+        qty={qty}
+        durationDays={durationDays}
+        sender={sender}
+      />
+      {/* // <PaymentElement/> */}
+    </RequireWalletContainer>
   );
 }
 
