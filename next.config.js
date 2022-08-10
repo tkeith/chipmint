@@ -9,6 +9,9 @@ const nextConfig = {
   swcMinify: true,
   serverRuntimeConfig: appConfig.server,
   publicRuntimeConfig: appConfig.public,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 }
 
 module.exports = nextConfig

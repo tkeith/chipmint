@@ -71,7 +71,7 @@ function Chipmint() {
         button.removeEventListener('click', toggleIframe);
       }  
     }
-  } , []);
+  } , [toggleIframe]);
   // Return a div containing the buttton with the element id "chipmint-button"
   return (
     <div>
