@@ -62,7 +62,7 @@ router.route('/requestOtp').post(wrap(async (req: Request, res: Response) => {
 }))
 
 async function isOtpValid(phoneNumber: string, otp: string): Promise<boolean> {
-  return (testMode && otp == '123456') || (!!(await (await getRedis()).get(`otpValid:${phoneNumber}:${otp}`)))
+  return (testMode && otp == '565656') || (!!(await (await getRedis()).get(`otpValid:${phoneNumber}:${otp}`)))
 }
 
 function phoneNumberVerificationMessageToSign(phoneNumber: string) {
@@ -147,7 +147,7 @@ router.route('/isAddressVerified/:address').get(wrap(async (req: Request, res: R
 }))
 
 router.route('/isAuthorized/:sender/:recipient').get(wrap(async (req: Request, res: Response) => {
-  const sender = req.params.sender
+  const sender = req.params.sender.toLowerCase()
   const recipient = (req.params.recipient as string).toLowerCase()
 
   const auth = await (await getDb()).collection('authorizations').findOne({sender: sender, recipient: recipient})
