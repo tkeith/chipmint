@@ -2,8 +2,16 @@ import { readFileSync } from "fs"
 import hre, { ethers, upgrades } from "hardhat"
 import _ from "lodash"
 import getConfig from "../../lib/getConfig"
+import privateKeyToAddress from "../../lib/privateKeyToAddress"
 
-const contractNames = ["MainContract"]
+const contractInfos = [
+  {
+    name: "MainContract",
+    initializerArgs: [
+      privateKeyToAddress(getConfig().server.manager_wallet_private_key)
+    ]
+  }
+]
 
 async function main() {
 
@@ -11,7 +19,10 @@ async function main() {
 
   let contractDeployments: any = {}
 
-  for (const contractName of contractNames) {
+  for (const contractInfo of contractInfos) {
+    const contractName = contractInfo.name
+    const initializerArgs = contractInfo.initializerArgs
+
     console.log('handling contract: ' + contractName)
 
     const Contract = await ethers.getContractFactory(contractName)
@@ -23,7 +34,7 @@ async function main() {
       await upgrades.upgradeProxy(address, Contract)
     } else {
       console.log('not already deployed, need to deploy fresh')
-      const contract = await upgrades.deployProxy(Contract, [], { initializer: 'initialize', kind: 'transparent' })
+      const contract = await upgrades.deployProxy(Contract, initializerArgs, { initializer: 'initialize', kind: 'transparent' })
 
       await contract.deployed()
 

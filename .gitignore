@@ -50,3 +50,6 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+
+!api-interaction-example.ipynb
