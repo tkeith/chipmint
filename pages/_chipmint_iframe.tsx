@@ -192,9 +192,11 @@ function AuthorizedElement() {
   )
 }
 
+const isBrowser = () => typeof window !== "undefined";
+
 function getParamValue(paramName: string)
 {
-  const isBrowser = () => typeof window !== "undefined";
+  /* Get the param values from a URL */
   if (!isBrowser()) {
     return;
   } 
@@ -288,6 +290,7 @@ function VerificationFlow (props) {
   const registerAuth = async (sender: string, qty: Number, exp: Number, signature: string) => {
     const url = addrPrefix + "/registerAuthorization";
     if (isLive) {
+      console.log("registerauth post:", url, sender, qty, exp, signature);
       const res = await axios.post(url, {
         sender, qty, exp, signature
       });
@@ -305,6 +308,7 @@ function VerificationFlow (props) {
 
   const { signMessage: signOptMessage } = useSignMessage({
     onSuccess(data, variables) {
+      window.signingOptMessage = undefined;
       // Verify signature when sign message succeeds
       const recoveredAddr = verifyMessage(variables.message, data);
       if (recoveredAddr === userAddr) {
@@ -314,13 +318,16 @@ function VerificationFlow (props) {
       }
     },
     onError(error, variables, context) {
-      setCurVeriState(VeriState.RequestingSignOtp);
+      window.signingOptMessage = undefined;
+      alert(error.message);
+      setCurVeriState(VeriState.EnterOtp);
       throw Error(error.message);
     }
   });
 
   const { signMessage: signAuthMessage } = useSignMessage({
     onSuccess(data, variables) {
+      window.signingAuthMessage = undefined;
       // Verify signature when sign message succeeds
       const recoveredAddr = verifyMessage(variables.message, data);
       if (recoveredAddr === userAddr) {
@@ -330,6 +337,7 @@ function VerificationFlow (props) {
       }
     },
     onError(error, variables, context) {
+      window.signingAuthMessage = undefined;
       setCurVeriState(VeriState.AskingAuth);
       throw Error(error.message);
     }
@@ -351,7 +359,8 @@ function VerificationFlow (props) {
         console.log("enter otp data:", res.data)
         const isOtpValid = res.data.otpValid;
         if (isOtpValid) {
-          const newMessageToSign: string = res.data.optMessageToSign;
+          const newMessageToSign: string = res.data.messageToSign;
+          console.log("newmsgtosign", newMessageToSign)
           setOptMessageToSign(newMessageToSign);
           setCurVeriState(VeriState.RequestingSignOtp);
         } else {
@@ -430,15 +439,25 @@ function VerificationFlow (props) {
     }).catch((reason) => {console.log(reason)});
   } else if (curVeriState === VeriState.RequestingSignOtp) {
     setCurVeriState(VeriState.SigningOtp);
-    signOptMessage({message: optMessageToSign});
+    if (isBrowser()) {
+      if (window.signingOptMessage === undefined) {
+        window.signingOptMessage = true;
+        signOptMessage({message: optMessageToSign});
+      }
+    }
   } else if (curVeriState === VeriState.Verified && props.needAuth === true) {
     setCurVeriState(VeriState.CheckAuth);
     checkAuthorized();
   } else if (curVeriState === VeriState.RequestingSignAuth) {
     setCurVeriState(VeriState.SigningAuth);
-    signAuthMessage({message: authMessageToSign})
+
+    if (isBrowser()) {
+      if (window.signingAuthMessage === undefined) {
+        window.signingAuthMessage = true;
+        signAuthMessage({message: authMessageToSign});
+      }
+    }
   }
-  // console.log(curVeriState, curVeriState === VeriState.Verified, props.needAuth === true, props.needAuth)
   return (
     <div>
       {curVeriState === VeriState.NotChecked &&
@@ -450,7 +469,6 @@ function VerificationFlow (props) {
       {curVeriState === VeriState.CheckAuth && <CheckingAuth/>}
       {curVeriState === VeriState.AskingAuth &&
         <GetAuthElement qty={props.qty} sender={props.sender} durationDays={props.durationDays} getAuthMessage={getAuthMessage}/>
-        // <VerificationElement requestOtp={requestOtp}/>
         }
       {curVeriState === VeriState.Authorized && <AuthorizedElement/>}
     </div>
@@ -460,6 +478,7 @@ function VerificationFlow (props) {
 function IFrameElement() {
   
   let needAuthParam = getParamValue('needAuth');
+  // true by default, in case param is undefined
   let needAuth = true;
   if (needAuthParam !== undefined ) {
     needAuth = needAuthParam === "true";
