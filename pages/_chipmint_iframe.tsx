@@ -7,14 +7,14 @@ import RequireWalletContainer from '../components/examples/RequireWalletContaine
 
 enum VeriState {
   NotChecked = 1,
-  notVerified,
   Verified,
   EnterOtp,
-  requestingSignOtp,
-  signingOtp,
-  checkAuth,
-  requestingSignAuth,
-  signingAuth,
+  RequestingSignOtp,
+  SigningOtp,
+  CheckAuth,
+  AskingAuth,
+  RequestingSignAuth,
+  SigningAuth,
   Authorized,
 };
 
@@ -148,6 +148,15 @@ function VerifiedElement() {
   )
 }
 
+function CheckingAuth() {
+  return (
+    <div className="bg-white shadow sm:rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <h3 className="text-lg leading-6 font-medium m-3 text-gray-900">Checking if you have authorized the sender...</h3>
+      </div>
+    </div>
+  )
+}
 
 function GetAuthElement(props) {
   return (
@@ -159,7 +168,7 @@ function GetAuthElement(props) {
           <div className="mt-2 max-w-xl text-sm text-gray-500">
             <p>Permit {props.sender} to send you {props.qty} messages for {props.durationDays} days.</p>
           </div>
-          <form className="mt-5 sm:flex sm:items-center" onSubmit={props.acceptAuth}>
+          <form className="mt-5 sm:flex sm:items-center" onSubmit={props.getAuthMessage}>
             <button
               type="submit"
               className="mt-3 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
@@ -168,6 +177,16 @@ function GetAuthElement(props) {
             </button>
           </form>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function AuthorizedElement() {
+  return (
+    <div className="bg-white shadow sm:rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <h3 className="text-lg leading-6 font-medium m-3 text-gray-900">You've authorized the service!</h3>
       </div>
     </div>
   )
@@ -212,12 +231,16 @@ function VerificationFlow (props) {
   if (userAddr === undefined) {
     throw Error("user addr undefined in wallet container")
   }
+  const currTime = Math.floor((new Date()).getTime() / 1000);
+  const addedTime = (props.durationDays || 365) * 60 * 60 * 24;
+  const exp = currTime + addedTime;
 
   const [curVeriState, setCurVeriState] = useState<VeriState>(VeriState.NotChecked);
 
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [otp, setOtp] = useState<string>("");
-  const [messageToSign, setMessageToSign] = useState<string>("");
+  const [optMessageToSign, setOptMessageToSign] = useState<string>("");
+  const [authMessageToSign, setAuthMessageToSign] = useState<string>("");
 
   console.log("starting veristate:", curVeriState);
 
@@ -244,7 +267,7 @@ function VerificationFlow (props) {
     }
   }
 
-  const registerVerification = async (otp: string, signature: string) => {
+  const registerVeri = async (otp: string, signature: string) => {
     const url = addrPrefix + "/registerVerification";
     if (isLive) {
       const res = await axios.post(url, {
@@ -254,28 +277,61 @@ function VerificationFlow (props) {
       if (res.status == 200) {
         setCurVeriState(VeriState.Verified);
       } else {
-        setCurVeriState(VeriState.requestingSignOtp);
+        setCurVeriState(VeriState.RequestingSignOtp);
         throw Error("registerveri failed");
       }
     } else {
       setCurVeriState(VeriState.Verified);
     }
-
   }
 
-  const { signMessage } = useSignMessage({
+  const registerAuth = async (sender: string, qty: Number, exp: Number, signature: string) => {
+    const url = addrPrefix + "/registerAuthorization";
+    if (isLive) {
+      const res = await axios.post(url, {
+        sender, qty, exp, signature
+      });
+      console.log("registerauth res:", res);
+      if (res.status == 200) {
+        setCurVeriState(VeriState.Authorized);
+      } else {
+        setCurVeriState(VeriState.AskingAuth);
+        throw Error("registerauth failed");
+      }
+    } else {
+      setCurVeriState(VeriState.Authorized);
+    }
+  }
+
+  const { signMessage: signOptMessage } = useSignMessage({
     onSuccess(data, variables) {
       // Verify signature when sign message succeeds
       const recoveredAddr = verifyMessage(variables.message, data);
       if (recoveredAddr === userAddr) {
-        registerVerification(otp, data);
+        registerVeri(otp, data);
       } else {
         throw Error(`User addr ${userAddr} and recovered addr ${recoveredAddr} don't match`)
       }
     },
     onError(error, variables, context) {
-      setCurVeriState(VeriState.requestingSignOtp);
-      throw Error(error);
+      setCurVeriState(VeriState.RequestingSignOtp);
+      throw Error(error.message);
+    }
+  });
+
+  const { signMessage: signAuthMessage } = useSignMessage({
+    onSuccess(data, variables) {
+      // Verify signature when sign message succeeds
+      const recoveredAddr = verifyMessage(variables.message, data);
+      if (recoveredAddr === userAddr) {
+        registerAuth(props.sender, props.qty, exp, data);
+      } else {
+        throw Error(`User addr ${userAddr} and recovered addr ${recoveredAddr} don't match`)
+      }
+    },
+    onError(error, variables, context) {
+      setCurVeriState(VeriState.AskingAuth);
+      throw Error(error.message);
     }
   });
 
@@ -295,10 +351,9 @@ function VerificationFlow (props) {
         console.log("enter otp data:", res.data)
         const isOtpValid = res.data.otpValid;
         if (isOtpValid) {
-          const newMessageToSign: string = res.data.messageToSign;
-          setMessageToSign(newMessageToSign);
-          // Call metamask here
-          setCurVeriState(VeriState.requestingSignOtp);
+          const newMessageToSign: string = res.data.optMessageToSign;
+          setOptMessageToSign(newMessageToSign);
+          setCurVeriState(VeriState.RequestingSignOtp);
         } else {
           alert("OPT is invalid");
         }
@@ -306,18 +361,56 @@ function VerificationFlow (props) {
         throw Error("check otp failed");
       }
     } else {
-      setCurVeriState(VeriState.requestingSignOtp);
+      setCurVeriState(VeriState.RequestingSignOtp);
     }
   }
 
-  const isAuthorized = async (event: React.FormEvent) => {
-    event.preventDefault()
-    let url: string = addrPrefix + "/isAuthorized/" + props.sender + "/" + userAddr;
+  const checkAuthorized = async () => {
+    let getUrl: string = addrPrefix + "/isAuthorized/" + props.sender + "/" + userAddr;
 
     if (isLive) {
-      
+      console.log("check auth url:", getUrl);
+      const res = await axios.get(getUrl);
+      if (res.status == 200) {
+        console.log("check auth data:", res.data)
+        const isAuthorized = res.data.authorized;
+        if (isAuthorized) {
+          setCurVeriState(VeriState.Authorized);
+        } else {
+          setCurVeriState(VeriState.AskingAuth);
+        }
+      } else {
+        throw Error("check authorization failed");
+      }
     } else {
-      setCurVeriState(VeriState.requestingSignAuth)
+      setCurVeriState(VeriState.AskingAuth)
+    }
+  }
+
+  const getAuthMessage = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (isLive) {
+      let url: string = addrPrefix + "/getAuthorizationMessageToSign";
+      const axiosParams = new URLSearchParams();
+      axiosParams.append("sender", props.sender);
+      axiosParams.append("qty", props.qty);
+      axiosParams.append("exp", String(exp));
+      console.log("getauth url", url);
+      const res = await axios.get(url, {
+        params: axiosParams
+      })
+
+      if (res.status == 200) {
+        console.log("get auth message data:", res.data)
+        const newMessageToSign: string = res.data.message;
+        setAuthMessageToSign(newMessageToSign);
+        setCurVeriState(VeriState.RequestingSignAuth);
+      } else {
+        throw Error("get auth message failed");
+      }
+    } else {
+      setCurVeriState(VeriState.AskingAuth);
     }
   }
 
@@ -335,11 +428,15 @@ function VerificationFlow (props) {
         setCurVeriState(VeriState.Verified);
       }
     }).catch((reason) => {console.log(reason)});
-  } else if (curVeriState === VeriState.requestingSignOtp) {
-    setCurVeriState(VeriState.signingOtp);
-    signMessage({message: messageToSign});
+  } else if (curVeriState === VeriState.RequestingSignOtp) {
+    setCurVeriState(VeriState.SigningOtp);
+    signOptMessage({message: optMessageToSign});
   } else if (curVeriState === VeriState.Verified && props.needAuth === true) {
-    setCurVeriState(VeriState.GetAuth);
+    setCurVeriState(VeriState.CheckAuth);
+    checkAuthorized();
+  } else if (curVeriState === VeriState.RequestingSignAuth) {
+    setCurVeriState(VeriState.SigningAuth);
+    signAuthMessage({message: authMessageToSign})
   }
   // console.log(curVeriState, curVeriState === VeriState.Verified, props.needAuth === true, props.needAuth)
   return (
@@ -349,9 +446,13 @@ function VerificationFlow (props) {
       }
       {curVeriState === VeriState.EnterOtp &&
         <EnterOtpElement enterOtp={enterOtp}/>}
-      {curVeriState === VeriState.Verified && <VerifiedElement/>}
-      {curVeriState === VeriState.GetAuth &&
-        <GetAuthElement qty={props.qty} sender={props.sender} durationDays={props.durationDays} acceptAuth={acceptAuth}/>}
+        {curVeriState === VeriState.Verified && <VerifiedElement/>}
+      {curVeriState === VeriState.CheckAuth && <CheckingAuth/>}
+      {curVeriState === VeriState.AskingAuth &&
+        <GetAuthElement qty={props.qty} sender={props.sender} durationDays={props.durationDays} getAuthMessage={getAuthMessage}/>
+        // <VerificationElement requestOtp={requestOtp}/>
+        }
+      {curVeriState === VeriState.Authorized && <AuthorizedElement/>}
     </div>
   );
 }
