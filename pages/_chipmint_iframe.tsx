@@ -7,6 +7,7 @@ enum VeriState {
   Verified,
   SentOtp,
   confirmingOtp,
+  GetAuth
 };
 
 function PaymentElement() {
@@ -136,8 +137,59 @@ function VerifiedElement() {
   )
 }
 
+
+function GetAuthElement(props) {
+  // console.log(props.saveText)
+  return (
+    <div className="bg-white shadow sm:rounded-lg">
+      <div className="px-4 py-5 sm:p-6">
+        <h3 className="text-lg leading-6 font-medium m-3 text-gray-900">Authorize app</h3>
+
+        <div className="rounded-md bg-gray-50 px-6 py-5 sm:flex sm:items-start sm:justify-between">
+          <div className="mt-2 max-w-xl text-sm text-gray-500">
+            <p>Permit app to send you XX messages until XXX.</p>
+          </div>
+          <form className="mt-5 sm:flex sm:items-center" onSubmit={props.acceptAuth}>
+            <div className="w-full sm:max-w-xs">
+              <label htmlFor="verify-tel" className="sr-only">
+                SOME FIELD
+              </label>
+              <input
+                type="tel"
+                name="tel"
+                id="verify-tel"
+                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                placeholder="XXX-XXX-XXXX"
+              />
+            </div>
+            <button
+              type="submit"
+              className="mt-3 w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              Authorize Now
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function getParamValue(paramName: string)
+{
+    var url = window.location.search.substring(1); //get rid of "?" in querystring
+    var qArray = url.split('&'); //get key-value pairs
+    for (var i = 0; i < qArray.length; i++) 
+    {
+        var pArr = qArray[i].split('='); //split key and value
+        if (pArr[0] === paramName) {
+          return pArr[1]; //return value
+        }
+    }
+}
+
 function VerificationFlow (props) {
-  const authRequest = props.authRequest;
+  console.log(props)
   
   const [curVeriState, setCurVeriState] = useState<VeriState>(VeriState.NotChecked);
 
@@ -199,17 +251,25 @@ function VerificationFlow (props) {
   //     height: 300,
   //   },
   // };
+  if (curVeriState === VeriState.Verified && props.needAuth) {
+    setCurVeriState(VeriState.GetAuth);
+  }
   return (
     <div>
       {curVeriState === VeriState.NotChecked  && <VerificationElement saveText={saveText}/>
       }
       {curVeriState === VeriState.SentOtp && <EnterOtpElement enterOtp={enterOtp}/>}
       {curVeriState === VeriState.Verified && <VerifiedElement/>}
+      {curVeriState === VeriState.GetAuth && <GetAuthElement/>}
     </div>
   );
 }
 
-function IFrameElement(props) {
+function IFrameElement() {
+  const props = {
+    // needAuth: getParamValue('needAuth'),
+    // msgQty: getParamValue('msgQty')
+  }
 
   return (
     // <div>
