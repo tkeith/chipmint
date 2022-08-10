@@ -1,4 +1,4 @@
-import { TestElement, Chipmint } from "../_chipmint_lib";
+import { TestElement, Chipmint } from "./_chipmint_lib";
 
 import React, { useState } from 'react';
 
@@ -9,7 +9,7 @@ function ChipmintPreviewIFrame(props) {
         `needAuth=${props.tagArgs?.needAuth || "true"}&` + 
         `qty=${props.tagArgs?.qty || 100}&` +
         `durationDays=${props.tagArgs?.durationDays || 365}&` +
-        `sender=${props.tagArgs?.sender || "0x23D9E89D457404dB99b6addC8638cc0e4368Bb5b"}`
+        `sender=${props.tagArgs?.sender || "THIS SHOULD NEVER APPEAR"}`
       }
         className="w-full h-80"
       />
@@ -25,12 +25,12 @@ function ChipmintPreviewFlow() {
   if (Object.keys(tagArgs).length > 3) {
     console.log("setting chipmint Tag:", tagArgs);
     chipmintTag = `\
-    <iframe src=\`https://app.chipmint.co/_chipmint_iframe?
-      needAuth=${tagArgs.needAuth}&
-      qty=${tagArgs.qty}&
-      durationDays=${tagArgs.durationDays}&
-      sender=${tagArgs.sender}\`
-    />`;
+<iframe src=\`https://app.chipmint.co/_chipmint_iframe?
+  needAuth=${tagArgs.needAuth}&
+  qty=${tagArgs.qty}&
+  durationDays=${tagArgs.durationDays}&
+  sender=${tagArgs.sender}\`
+/>`;
   }
   // console.log("tagArgs:", tagArgs.qty);
   const tagTextStyle: { [key: string]: React.CSSProperties } = {
@@ -94,8 +94,8 @@ function ChipmintPreviewFlow() {
                         name="sender-addr"
                         id="sender-addr"
                         placeholder="0x..."
-                        value={tagArgs.sender || "0x23D9E89D457404dB99b6addC8638cc0e4368Bb5c"}
-                        onChange={e => setTagArgs({ ...tagArgs, sender: e.target.value })}
+                        // value={tagArgs.sender || "0x23D9E89D457404dB99b6addC8638cc0e4368Bb5c"}
+                        // onChange={e => setTagArgs({ ...tagArgs, sender: e.target.value })}
                         className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                       />
                     </div>
@@ -206,7 +206,7 @@ function ChipmintPreviewFlow() {
             </div>
           </div>
           <div className="mt-5 md:mt-0 md:col-span-2">
-            <ChipmintPreviewIFrame tagArgs={tagArgs}/>
+            {Object.keys(tagArgs).length > 3 && <ChipmintPreviewIFrame tagArgs={tagArgs}/>}
           </div>
         </div>
       </div>
