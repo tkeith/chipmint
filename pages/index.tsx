@@ -1,5 +1,3 @@
-import { TestElement, Chipmint } from "../components/_chipmint_lib";
-
 import React, { useState } from 'react';
 
 function ChipmintPreviewIFrame(props: any) {
@@ -263,20 +261,6 @@ function ChipmintTryoutFullPage() {
     </div>
   </>
   )
-}
-
-
-
-function Page() {
-  
-  return <div className="p-4">
-    <TestElement />
-    <div id="chipmintSection">
-      <div id="Chipmint" >
-        <Chipmint />
-      </div>
-    </div>
-  </div>
 }
 
 export default ChipmintTryoutFullPage;
