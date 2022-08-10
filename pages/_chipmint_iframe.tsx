@@ -1,7 +1,7 @@
 import axios from 'axios';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAccount, useSignMessage } from 'wagmi';
-import { verifyMessage, Bytes, hexlify } from 'ethers/lib/utils';
+import { verifyMessage } from 'ethers/lib/utils';
 import RequireWalletContainer from '../components/examples/RequireWalletContainer'
 
 

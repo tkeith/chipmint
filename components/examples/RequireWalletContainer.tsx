@@ -9,10 +9,17 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   const { isConnected } = useAccount();
   const isMounted = useIsMounted();
   const { chain } = useNetwork();
-
+  const connectButtonStyle: { [key: string]: React.CSSProperties } = {
+    container: {
+      "padding-left": "15px",
+      "padding-right": "15px",
+    },
+  };
   return (
-    <>
-      <ConnectButton />
+    <> 
+      <div style={connectButtonStyle.container}>
+        <ConnectButton/>
+      </div>
       {isMounted && isConnected && !chain?.unsupported && children}
       {isMounted && !isConnected && <WalletNotConnectedWarning />}
       {isMounted && isConnected && chain?.unsupported && <WrongChainWarning />}

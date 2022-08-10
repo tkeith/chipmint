@@ -1,15 +1,15 @@
-import { TestElement, Chipmint, addrPrefix } from "../_chipmint_lib";
+import { TestElement, Chipmint } from "../_chipmint_lib";
 
+import React, { useState } from 'react';
 
-function App() {
+function ChipmintPreviewIFrame(props) {
   return (
     <div className="App border-dashed border border-black p-7 rounded-lg" >
       <iframe src={"http://localhost:8000/_chipmint_iframe?" +
-        "needAuth=true&" + 
-        "qty=100&" +
-        "durationDays=365&" +
-        "sender=0x23D9E89D457404dB99b6addC8638cc0e4368Bb5b"
-        // + "&user=0x108C9FCd65e80c9999B34F85888861B4E20AA54d"
+        `needAuth=${props.tagArgs?.needAuth || "true"}&` + 
+        `qty=${props.tagArgs?.qty || 100}&` +
+        `durationDays=${props.tagArgs?.durationDays || 365}&` +
+        `sender=${props.tagArgs?.sender || "0x23D9E89D457404dB99b6addC8638cc0e4368Bb5b"}`
       }
         className="w-full h-80"
       />
@@ -17,20 +17,57 @@ function App() {
   );
 }
 
-function Example() {
-  const chipmintTag = `\
+function ChipmintPreviewFlow() {
+
+  const [tagArgs, setTagArgs] = useState({});
+
+  let chipmintTag = "";
+  if (Object.keys(tagArgs).length > 3) {
+    console.log("setting chipmint Tag:", tagArgs);
+    chipmintTag = `\
     <iframe src=\`https://app.chipmint.co/_chipmint_iframe?
-      needAuth=true&
-      qty=100&
-      durationDays=365&
-      sender=0x23D9E89D457404dB99b6addC8638cc0e4368Bb5b\`
+      needAuth=${tagArgs.needAuth}&
+      qty=${tagArgs.qty}&
+      durationDays=${tagArgs.durationDays}&
+      sender=${tagArgs.sender}\`
     />`;
+  }
+  // console.log("tagArgs:", tagArgs.qty);
   const tagTextStyle: { [key: string]: React.CSSProperties } = {
     container: {
-      // "font-family": "monospace",
+      "font-family": "monospace",
       "color": "purple",
     },
   };
+
+  const generateTag = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const formData = new FormData(event.target as HTMLFormElement);
+
+    const sender = formData.get('sender-addr') as string;
+    const qty = Number(formData.get('qty'));
+    const durationDays = Number(formData.get('duration-days'));
+    const needAuth = 'true';
+    // console.log("generatingTag")
+    setTagArgs({
+      sender, qty, durationDays, needAuth
+    });
+  }
+
+  const copyTagToClipboard = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const formData = new FormData(event.target as HTMLFormElement);
+
+    const chipmintTagCode = formData.get('chipmint-tag') as string;
+    navigator.clipboard.writeText(chipmintTagCode).then(
+      () => {
+        // console.log('Async: Copying to clipboard was successful!');
+      }, (err) => {
+        console.error('Async: Could not copy text: ', err);
+      }
+    );
+  }
+
   return (
     <>
       <div>
@@ -44,7 +81,7 @@ function Example() {
             </div>
           </div>
           <div className="mt-5 md:mt-0 md:col-span-2">
-            <form action="#" method="POST">
+            <form onSubmit={generateTag}>
               <div className="shadow sm:rounded-md sm:overflow-hidden">
                 <div className="px-4 py-5 bg-white space-y-6 sm:p-6">
                   <div className="grid grid-cols-3 gap-6">
@@ -57,7 +94,8 @@ function Example() {
                         name="sender-addr"
                         id="sender-addr"
                         placeholder="0x..."
-                        value="0x23D9E89D457404dB99b6addC8638cc0e4368Bb5c"
+                        value={tagArgs.sender || "0x23D9E89D457404dB99b6addC8638cc0e4368Bb5c"}
+                        onChange={e => setTagArgs({ ...tagArgs, sender: e.target.value })}
                         className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                       />
                     </div>
@@ -70,7 +108,8 @@ function Example() {
                         type="number"
                         name="qty"
                         id="qty"
-                        value={100}
+                        value={tagArgs.qty || 100}
+                        onChange={e => setTagArgs({ ...tagArgs, qty: e.target.value})}
                         className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                       />
                     </div>
@@ -83,7 +122,8 @@ function Example() {
                         type="number"
                         name="duration-days"
                         id="duration-days"
-                        value={365}
+                        value={tagArgs.durationDays || 365}
+                        onChange={e => setTagArgs({ ...tagArgs, durationDays: e.target.value})}
                         className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
                       />
                     </div>
@@ -119,32 +159,34 @@ function Example() {
             </div>
           </div>
           <div className="mt-5 md:mt-0 md:col-span-2">
-            <div className="shadow sm:rounded-md sm:overflow-hidden">
-              <div className="px-4 py-5 bg-white space-y-6 sm:p-6">
-                <div>
-                  <div className="mt-1">
-                    <textarea
-                      id="chipmintTag"
-                      name="chipmintTag"
-                      rows={6}
-                      spellCheck="false"
-                      style={tagTextStyle}
-                      className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
-                      defaultValue={chipmintTag}
-                    />
+            <form onSubmit={copyTagToClipboard}>
+              <div className="shadow sm:rounded-md sm:overflow-hidden">
+                <div className="px-4 py-5 bg-white space-y-6 sm:p-6">
+                  <div>
+                    <div className="mt-1">
+                      <textarea
+                        id="chipmint-tag"
+                        name="chipmint-tag"
+                        rows={8}
+                        spellCheck="false"
+                        style={tagTextStyle.container}
+                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md"
+                        defaultValue={chipmintTag}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-                <button
-                  type="submit"
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Copy to clipboard
-                </button>
+                <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                  <button
+                    type="submit"
+                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Copy to clipboard
+                  </button>
+                </div>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>
@@ -164,7 +206,7 @@ function Example() {
             </div>
           </div>
           <div className="mt-5 md:mt-0 md:col-span-2">
-            <App/>
+            <ChipmintPreviewIFrame tagArgs={tagArgs}/>
           </div>
         </div>
       </div>
@@ -173,12 +215,12 @@ function Example() {
 }
 
 
-function FullPage() {
+function ChipmintTryoutFullPage() {
   return (
   <>
     <div className="min-h-full pt-16 pb-12 flex flex-col bg-white">
       <main className="flex-grow flex flex-col justify-center max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <Example/>
+        <ChipmintPreviewFlow/>
         {/* Logo */}
         {/* <div className="flex-shrink-0 flex justify-center">
           <a href="/" className="inline-flex">
@@ -190,18 +232,18 @@ function FullPage() {
             />
           </a>
         </div> */}
-        {/* <div className="py-16">
+        <div className="py-16">
           <div className="text-center">
-            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">404 error</p>
+            {/* <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">404 error</p>
             <h1 className="mt-2 text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">Page not found.</h1>
-            <p className="mt-2 text-base text-gray-500">Sorry, we couldn’t find the page you’re looking for.</p>
+            <p className="mt-2 text-base text-gray-500">Sorry, we couldn’t find the page you’re looking for.</p> */}
             <div className="mt-6">
-              <a href="#" className="text-base font-medium text-indigo-600 hover:text-indigo-500">
+              <a href="https://app.chipmint.co" className="text-base font-medium text-indigo-600 hover:text-indigo-500">
                 Go back home<span aria-hidden="true"> &rarr;</span>
               </a>
             </div>
           </div>
-        </div> */}
+        </div>
       </main>
       {/* <footer className="flex-shrink-0 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex justify-center space-x-4">
@@ -237,4 +279,4 @@ function Page() {
   </div>
 }
 
-export default FullPage;
+export default ChipmintTryoutFullPage;
