@@ -122,12 +122,12 @@ router.route('/registerVerification').post(wrap(async (req: Request, res: Respon
   const nonce = randomHexString(32)
   const phoneHash = getPhoneHash(phoneNumber, nonce)
 
-  await (await getDb()).collection('recipients').updateOne({address: recipient}, {
+  await (await getDb()).collection('recipients').updateOne({address: recipient}, {$set:{
     phoneNumber: phoneNumber,
     address: recipient,
     nonce: nonce,
     phoneHash: phoneHash
-  }, {upsert: true})
+  }}, {upsert: true})
 
   console.log('verifying on chain:', phoneNumber, recipient)
 
