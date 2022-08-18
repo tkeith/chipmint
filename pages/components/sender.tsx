@@ -1,10 +1,10 @@
-import Navbar from './navbar';
+import Navbar from '../../components/examples/navbar';
 import axios from 'axios';
 import {useEffect, useState} from 'react';
 import SendSms from '../../public/images/sendsms.jpg';
 import moment from 'moment';
 import { useAccount, useSignMessage, useContractWrite, useProvider } from 'wagmi';
-import RequireWalletContainer from '../../components/examples/RequireWalletContainer';
+import RequireWalletConnector from '../../components/examples/RequireWalletConnector';
 import TransparentUpgradableProxyABI from '../../public/abi/TransparentUpgradableProxyABI.json';
 
 const contractAddress = "0xB788E3281F36C9f403d4fc8759bB5A8a6EA46306";
@@ -30,6 +30,7 @@ function SenderFunction() {
 
   const isBrowser = () => typeof window !== "undefined";
   if(isBrowser()) {
+    console.log("hello---");
     if(window.signingAuthMessage === undefined) {
       window.signingAuthMessage = true;
       console.log("calling signauthmessage"); 
@@ -38,7 +39,7 @@ function SenderFunction() {
 
   const [isError, setIsError] = useState(false);
   const [value, setValue] = useState('');
-  const [days, setDays]:any = useState(0);
+  const [days, setDays]:any = useState(365);
   const [walletAddress, setWalletAddress] = useState('');
   const [curVeriState, setCurVeriState] = useState<VeriState>(VeriState.NotChecked);
   const [authMessageToSign, setAuthMessageToSign] = useState<string>("");
@@ -133,8 +134,8 @@ function SenderFunction() {
           <h1 className='font-sans text-2xl pt-3'>Sending SMS</h1>
           <div>
       <div className="mt-1 relative rounded-md shadow-sm">
-        <div className="absolute inset-y-0 left-0 flex items-center">
-          <label htmlFor="recipient_address" className="sr-only">
+        <div className="mt-1 float-left">
+          <label>
             Recipient Address
           </label>
         </div>
@@ -151,8 +152,8 @@ function SenderFunction() {
       </div>
 
       <div className="mt-1 relative rounded-md shadow-sm">
-        <div className="absolute inset-y-0 left-0 flex items-center">
-          <label htmlFor="country" className="sr-only">
+        <div className="mt-1 float-left">
+          <label>
             Quantity of Messages
           </label>
         </div>
@@ -169,9 +170,9 @@ function SenderFunction() {
       </div>
   
       <div className="mt-1 relative rounded-md shadow-sm">
-        <div className="absolute inset-y-0 left-0 flex items-center">
-          <label htmlFor="country" className="sr-only">
-            Expiration Period
+        <div className="mt-1 float-left">
+          <label>
+            Expiration Period (in days)
           </label>
         </div>
 
@@ -195,7 +196,7 @@ function SenderFunction() {
       className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
       onClick={getAuthMessage}
       >
-      Go back to page
+      Send SMS
       </button>
     </div>
         </div>
@@ -207,8 +208,8 @@ function SenderFunction() {
 
 export default function Sender() {
   return (
-    <RequireWalletContainer>
+    <RequireWalletConnector>
       <SenderFunction/>
-    </RequireWalletContainer>
+    </RequireWalletConnector>
   );
 }

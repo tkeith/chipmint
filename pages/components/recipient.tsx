@@ -1,4 +1,4 @@
-import Navbar from './navbar'
+import Navbar from '../../components/examples/navbar'
 import axios from 'axios'
 import VerifyIcon from '../../public/images/verify_icon.jpg'
 import { Fragment, useState } from 'react'

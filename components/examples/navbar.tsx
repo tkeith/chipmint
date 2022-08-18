@@ -1,10 +1,37 @@
 import {useState} from 'react'
-import { TextButton } from '../../components/examples/misc'
+import { TextButton } from './misc'
 import { useAccount, useBalance, useNetwork } from 'wagmi'
 import { useSendTransaction } from 'wagmi'
 import { BigNumber } from 'ethers'
-import WalletContainer from './walletContainer'
-import logo from '../../public/images/logo.jpeg'
+import logo from '../../public/images/logo.jpg'
+import { ConnectButton } from "@rainbow-me/rainbowkit"
+import DAppBase from "./WagmiBase"
+import WalletNotConnectedWarning from "./WalletNotConnectedWarning"
+import useIsMounted from '../../hooks/useIsMounted'
+import WrongChainWarning from "./WrongChainWarning"
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  const { isConnected } = useAccount();
+  const isMounted = useIsMounted();
+  const { chain } = useNetwork();
+  const connectButtonStyle: { [key: string]: React.CSSProperties } = {
+    container: {
+      "padding-left": "15px",
+      "padding-right": "15px",
+    },
+  };
+  return (
+    <> 
+      <div style={connectButtonStyle.container}>
+        <ConnectButton/>
+      </div>
+      {isMounted && isConnected && !chain?.unsupported && children}
+      {isMounted && !isConnected && <WalletNotConnectedWarning />}
+      {isMounted && isConnected && chain?.unsupported && <WrongChainWarning />}
+    </>
+  )
+}
+
 
 function ConnectedInfo() {
     const { address } = useAccount();
@@ -68,8 +95,8 @@ function MobileNav({open, setOpen}: {open:any, setOpen:any}) {
     )
 }
 
-export default function Navbar() {
-  const [open, setOpen] = useState(false)
+export default function Navbar({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
       return (
           <nav className="flex filter drop-shadow-md bg-white px-4 py-4 h-20 items-center">
               <MobileNav open={open} setOpen={setOpen}/>
@@ -87,15 +114,20 @@ export default function Navbar() {
                   </div>
   
                   <div className="hidden md:flex">
+                      <NavLink to="/home">
+                          <p className="mt-1.5">HOME</p>
+                      </NavLink>
                       <NavLink to="/components/sender">
                         <p className="mt-1.5">SENDER</p>
                       </NavLink>
                       <NavLink to="/components/recipient">
                           <p className="mt-1.5">RECIPIENT</p>
                       </NavLink>
-                      <WalletContainer>
-                        <ConnectedInfo />
-                      </WalletContainer>
+                      <DAppBase>
+                        <Wrapper>
+                          {children}
+                        </Wrapper>
+                      </DAppBase>
                   </div>
               </div>
           </nav>

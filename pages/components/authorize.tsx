@@ -1,4 +1,4 @@
-import Navbar from './navbar'
+import Navbar from '../../components/examples/navbar'
 import AuthorizeIcon from '../../public/images/authorize_icon.png'
 import { SubmitButton } from '../../components/examples/misc'
 
